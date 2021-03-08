@@ -1,0 +1,241 @@
+<!-- file:///D:/html/fish.html?width=16&height=7&players=4 -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>        
+            *, *::before, *::after {
+                margin: 0;
+                padding: 0;
+                border: 0;
+                box-sizing: border-box;
+                font-size: 0;
+            }
+
+            body {
+                background-color: cornflowerblue;
+
+                /* DEBUG */
+                /* border-width: 1px; */
+                /* border-color: black; */
+                /* border-style: solid; */
+            }
+
+            .game {
+                margin-top: 30px;
+                margin-left: 30px;
+                margin-bottom: 100px;
+            }
+
+            .board {
+                text-align: center;
+                /*margin-top: 10px;*/
+                /* margin-bottom: 100px;*/
+                display: inline-block;
+
+                /* DEBUG */
+                /* border-width: 1px; */
+                /* border-color: black; */
+                /* border-style: solid; */
+            }
+
+            .row {
+                margin-bottom: 24px;
+            }
+
+            .cell {
+                width: 100px;
+                height: 100px;
+                text-align: center;
+                display: inline-block;
+                position: relative;
+                margin-left: 21px;
+                margin-top: 21px;
+            }
+
+            .cell:nth-child(even) {
+                top: 72px;
+            }
+
+            .hex_tile,
+            .hex_img {
+                display: inline-block;             
+                clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+                top: 50%;
+                left: 50%;
+                position: absolute;
+                transform: translate(-50%, -50%);
+            }
+
+            .hex_tile {                
+                width: 160%;
+                height: 160%;
+                background-color:aqua;
+            }
+
+            .hex_tile_hidden,
+            .hex_tile_hidden > .hex {
+                display: none;
+            }
+
+            .hex_tile:hover {
+                background-color:darkslateblue;
+            }
+
+            .hex_tile:active {
+                background-color: red;
+            }
+
+            .hex_img {
+                width: 90%;
+                height: 90%;
+            }
+
+            .scoreboard {
+                margin-left: 60px;
+                display: inline-block;
+                position: absolute;
+                
+                /* DEBUG */
+                /* border-width: 1px; */
+                /* border-color: black; */
+                /* border-style: solid; */
+            }
+
+            .score {
+                font-size: 30px;
+                position: relative;
+                /* DEBUG */
+                /* border-width: 1px; */
+                /* border-color: black; */
+                /* border-style: solid; */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="game">
+            <div class="board"></div><div class="scoreboard"></div>
+        </div>
+    </body>
+    <script>
+        let player_index = 0;
+
+        const params = new URLSearchParams(window.location.search);
+        const width = params.get('width');
+        const height = params.get('height');
+        const nplayers = params.get('players');
+
+        // TBD: Check nplayers;
+
+        // TBD: Use objects
+        const players = [
+            {
+                color: 'red',
+                score: 0,
+                last_selected_tile: null
+            },
+            {
+                color: 'green',
+                score: 0,
+                last_selected_tile: null
+            },
+            {
+                color: 'blue',
+                score: 0,
+                last_selected_tile: null
+            },
+            {
+                color: 'yellow',
+                score: 0,
+                last_selected_tile: null
+            }
+        ];
+    
+        setBoard(width, height, nplayers);
+
+        function tileOnClick(e) {
+            // Either .hex_tile or .hex_image can be clicked, so to always select the .hex_tile
+            // we find the most nested element which is .hex_image and select its parent.
+            let element = e.target;
+
+            while (element.firstElementChild) {
+                element = element.firstElementChild;
+            }
+            element = element.parentElement;
+
+            selectElementForPlayer(element, player_index);
+
+            player_index = (player_index + 1) % nplayers;
+        }
+
+        function setBoard(width, height, nplayers) {
+            let board = document.querySelector('.board');
+
+            for (j = 0; j < height; ++j) {
+                let row = document.createElement('div');
+                row.className = 'row';
+                for (i = 0; i < width; ++i) {
+                    let cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    let hex_tile = document.createElement('div');
+                    hex_tile.className = 'hex_tile';
+                    hex_tile.addEventListener('click', tileOnClick, false);
+                
+                    let hex_img = document.createElement('img');
+                    hex_img.className = 'hex_img';
+                    let n = Math.floor(Math.random() * 3) + 1;   
+                    hex_img.src = n + 'fish.jpg';
+                
+                    hex_tile.appendChild(hex_img);
+                    cell.appendChild(hex_tile);
+                    row.appendChild(cell);
+                }
+                board.appendChild(row);
+            }
+
+            let scoreboard = document.querySelector('.scoreboard');
+
+            for (k = 0; k < nplayers; ++k) {
+                let score = document.createElement('div');
+                score.className = 'score';
+                score.style.color = players[k].color;
+                score.innerHTML = 'Score: 0';
+                scoreboard.appendChild(score);
+            }
+        }
+
+        function selectElementForPlayer(element, player_index) {
+            // Do nothing if element clicked again.
+            for (i = 0; i < nplayers; ++i) {
+                if (players[i].last_selected_tile == element) {
+                    return;
+                }
+            }
+
+            updateScoreForPlayer(player_index);
+
+            // Mark the current element.
+            players[player_index].last_selected_tile = element;
+            players[player_index].last_selected_tile.style.background = players[player_index].color;
+        }
+
+        function updateScoreForPlayer(player_index) {
+            let hex_tile = players[player_index].last_selected_tile;
+
+            if (hex_tile != null) {
+                // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
+                // The value for updating score is the 1st character after the last '/'.
+                let hex_img = hex_tile.firstElementChild;
+                let score = players[player_index].score;
+                score = score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
+                players[player_index].score = score;
+
+                let scoreboard = document.querySelector('.scoreboard');
+                scoreboard.childNodes[player_index].innerHTML = 'Score: ' + score;
+
+                // Hide the previously selected element.
+                hex_tile.style.visibility = 'hidden';                
+            }
+        }
+    </script>
+</html>

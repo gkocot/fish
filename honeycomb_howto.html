@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                /*box-sizing: border-box;*/
+
+                /* DEBUG */
+                /* border-color: black; */
+                /* border-width: 1px; */
+                /* border-style: solid; */
+            }
+
+            body {
+                text-align: center;
+                margin-top: 50px;
+            }
+
+            .cell {
+                position: relative;
+                display: inline-block;
+                /* Example: a=100px, width=2*a */
+                width: 200px;
+                height: 200px;
+                /* margin=0.366*a, between two squares for which hexagon circumscribed on them are adjacent. */
+                margin-right: 37px;
+                
+                /*background-color: lightseagreen;*/
+            }
+
+            .cell:nth-child(even) {
+                /* top=1.366*a, vertical displacement between two squares for which hexagon circumscribed on them are adjacent
+                 * + few px to account for borders probably, I couldn't quite figure it out. */
+                top: 140px;
+            }
+
+            .hex {
+                position: absolute;
+                display: inline-block;
+                background-color: royalblue;
+                top: 0;
+                left: 0;
+                /* .hex fills the containing .cell in 100%, then is clipped to show only hexagonal view and
+                 * scaled by 1.577 to make it circumscribe the .cel square. */
+                width: 100%;
+                height: 100%;
+                clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+                transform: scale(1.55);
+            }
+
+        </style>
+    </head>
+
+    <body>    
+        <div class="cell"><div class="hex"></div></div><div class="cell"><div class="hex"></div></div><div class="cell"><div class="hex"></div>
+        </div><div class="cell"><div class="hex"></div></div><div class="cell"><div class="hex"></div></div><div class="cell"><div class="hex"></div></div>
+    </body>
+
+    <script>
+    </script>
+</html>
