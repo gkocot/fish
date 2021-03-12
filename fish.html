@@ -185,7 +185,7 @@
                     hex_img.className = 'hex_img';
                     let n = Math.floor(Math.random() * 3) + 1;   
                     hex_img.src = n + 'fish.jpg';
-                
+
                     hex_tile.appendChild(hex_img);
                     cell.appendChild(hex_tile);
                     row.appendChild(cell);
@@ -204,19 +204,22 @@
             }
         }
 
-        function selectElementForPlayer(element, player_index) {
-            // Do nothing if element clicked again.
+        function selectElementForPlayer(hex_tile, player_index) {
+            // Do nothing if hex_tile clicked again.
             for (i = 0; i < nplayers; ++i) {
-                if (players[i].last_selected_tile == element) {
+                if (players[i].last_selected_tile == hex_tile) {
                     return;
                 }
             }
 
             updateScoreForPlayer(player_index);
 
-            // Mark the current element.
-            players[player_index].last_selected_tile = element;
+            // Mark the current hex_tile.
+            players[player_index].last_selected_tile = hex_tile;
             players[player_index].last_selected_tile.style.background = players[player_index].color;
+            let hex_img = hex_tile.firstElementChild;
+            hex_img.style.opacity = 0.5;
+            //element.style.background = players[player_index].color;
         }
 
         function updateScoreForPlayer(player_index) {
