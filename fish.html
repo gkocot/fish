@@ -162,9 +162,9 @@
             }
             element = element.parentElement;
 
-            selectElementForPlayer(element, player_index);
-
-            player_index = (player_index + 1) % nplayers;
+            if (selectElementForPlayer(element, player_index)) {
+                player_index = (player_index + 1) % nplayers;
+            }
         }
 
         function setBoard(width, height, nplayers) {
@@ -179,6 +179,7 @@
 
                     let hex_tile = document.createElement('div');
                     hex_tile.className = 'hex_tile';
+                    hex_tile.id = j + ',' + i;
                     hex_tile.addEventListener('click', tileOnClick, false);
                 
                     let hex_img = document.createElement('img');
@@ -204,22 +205,67 @@
             }
         }
 
-        function selectElementForPlayer(hex_tile, player_index) {
+        function isValidSelection(hex_tile, player_index) {
             // Do nothing if hex_tile clicked again.
             for (i = 0; i < nplayers; ++i) {
                 if (players[i].last_selected_tile == hex_tile) {
-                    return;
+                    return false;
                 }
             }
+            
+            if (players[player_index].last_selected_tile != null) {
+                let id1 = players[player_index].last_selected_tile.id.split(',').map(x => +x);
+                let y1 = id1[0];
+                let x1 = id1[1];
 
-            updateScoreForPlayer(player_index);
+                let id2 = hex_tile.id.split(',').map(x => +x);
+                let y2 = id2[0];
+                let x2 = id2[1];
 
-            // Mark the current hex_tile.
-            players[player_index].last_selected_tile = hex_tile;
-            players[player_index].last_selected_tile.style.background = players[player_index].color;
-            let hex_img = hex_tile.firstElementChild;
-            hex_img.style.opacity = 0.5;
-            //element.style.background = players[player_index].color;
+                let dx = Math.abs(x1 - x2);
+                let dy = Math.abs(y1 - y2);
+
+                // Elements in the same column.
+                if (x1 == x2)
+                    return true;
+
+                // Elements in adjacent columns in the same row.
+                if ((y1 == y2) && (dx == 1))
+                    return true;
+
+                // Elements on (x = 2y) or (x = -2y) diagonals.
+                if(dx == 2 * dy)
+                    return true;
+
+                // Elements on (x = 2y) or (x = -2y) diagonals adjusted with +/- 1 margin
+                // depending on previous selection column, if it was even or odd
+                // and relation between previous and curren selection row.
+                let odd = (x1 % 2) ? 1 : -1;
+                let greater = (y1 > y2) ? 1 : -1;
+                let margin = odd * greater;
+
+                if(dx == 2 * dy + margin)
+                    return true;
+
+                return false;
+            }
+
+            return true;
+        }
+
+        function selectElementForPlayer(hex_tile, player_index) {
+            if (isValidSelection(hex_tile, player_index)) {
+                updateScoreForPlayer(player_index);
+
+                // Mark the current hex_tile.
+                players[player_index].last_selected_tile = hex_tile;
+                players[player_index].last_selected_tile.style.background = players[player_index].color;
+                let hex_img = hex_tile.firstElementChild;
+                hex_img.style.opacity = 0.5;
+                return true;
+            }
+
+            return false;
         }
 
         function updateScoreForPlayer(player_index) {
