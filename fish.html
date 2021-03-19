@@ -170,7 +170,7 @@
 
                     let hex_tile = document.createElement('div');
                     hex_tile.className = 'hex_tile';
-                    hex_tile.id = j + ',' + i;
+                    hex_tile.id = '_' + j + '_' + i;
                     hex_tile.addEventListener('click', tileOnClick, false);
                 
                     let hex_img = document.createElement('img');
@@ -196,6 +196,33 @@
             }
         }
 
+        function columnMinMax(x1, y1) {
+            let ymin = y1;
+            let ymax = y1;
+            let id;
+            let hex_tile;
+
+            while (ymin >= 0) {
+                id = '#_' + ymin + '_' + x1;
+                hex_tile = document.querySelector(id);
+                if (hex_tile.style.visibility == 'hidden') {
+                    break;
+                }
+                ymin -= 1;
+            }
+
+            while (ymax < height) {
+                id = '#_' + ymax + '_' + x1;
+                hex_tile = document.querySelector(id);
+                if (hex_tile.style.visibility == 'hidden') {
+                    break;
+                }
+                ymax += 1;
+            }
+
+            return {ymin, ymax};
+        }
+
         function isValidSelection(hex_tile, player_index) {
             // Do nothing if hex_tile clicked again.
             for (i = 0; i < nplayers; ++i) {
@@ -205,11 +232,11 @@
             }
             
             if (players[player_index].last_selected_tile != null) {
-                let id1 = players[player_index].last_selected_tile.id.split(',').map(x => +x);
+                let id1 = players[player_index].last_selected_tile.id.substring(1).split('_').map(x => +x);
                 let y1 = id1[0];
                 let x1 = id1[1];
 
-                let id2 = hex_tile.id.split(',').map(x => +x);
+                let id2 = hex_tile.id.substring(1).split('_').map(x => +x);
                 let y2 = id2[0];
                 let x2 = id2[1];
 
@@ -217,7 +244,8 @@
                 let dy = Math.abs(y1 - y2);
 
                 // Elements in the same column.
-                if (x1 == x2)
+                let {ymin, ymax} = columnMinMax(x1, y1);
+                if ((x1 == x2) && (y2 > ymin) && (y2 < ymax))
                     return true;
 
                 // Elements in adjacent columns in the same row.
