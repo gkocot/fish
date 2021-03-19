@@ -196,16 +196,44 @@
             }
         }
 
+        function allPlayersPositions() {
+            let positions = [];
+            for (i = 0; i < nplayers; ++i) {
+                if (players[i].last_selected_tile != null) {
+                    positions.push(yxFromId(players[i].last_selected_tile.id))
+                }
+            }
+            return positions;
+        }
+
+        function otherPlayersPositions(x, y) {
+            return allPlayersPositions().filter(
+                (position) => { return (position[0] != y) || (position[1] != x); }
+            );
+        }
+
+        function otherPlayersInColumnPositions(x, y) {
+            return otherPlayersPositions(x, y).filter(
+                (position) => { return (position[1] == x); }
+            );
+        }
+
+        function otherPlayersInColumnYs(x, y) {
+            return otherPlayersInColumnPositions(x, y).map(position => position[0]);
+        }
+
         function columnMinMax(x1, y1) {
             let ymin = y1;
             let ymax = y1;
             let id;
             let hex_tile;
+            let other = otherPlayersInColumnYs(x1, y1);
 
             while (ymin >= 0) {
                 id = '#_' + ymin + '_' + x1;
                 hex_tile = document.querySelector(id);
-                if (hex_tile.style.visibility == 'hidden') {
+                if (hex_tile.style.visibility == 'hidden' ||
+                    other.includes(ymin)) {
                     break;
                 }
                 ymin -= 1;
@@ -214,13 +242,18 @@
             while (ymax < height) {
                 id = '#_' + ymax + '_' + x1;
                 hex_tile = document.querySelector(id);
-                if (hex_tile.style.visibility == 'hidden') {
+                if (hex_tile.style.visibility == 'hidden' ||
+                    other.includes(ymax)) {
                     break;
                 }
                 ymax += 1;
             }
 
             return {ymin, ymax};
+        }
+
+        function yxFromId(id) {
+            return id.substring(1).split('_').map(x => +x);
         }
 
         function isValidSelection(hex_tile, player_index) {
@@ -232,13 +265,13 @@
             }
             
             if (players[player_index].last_selected_tile != null) {
-                let id1 = players[player_index].last_selected_tile.id.substring(1).split('_').map(x => +x);
-                let y1 = id1[0];
-                let x1 = id1[1];
+                let coordinates1 = yxFromId(players[player_index].last_selected_tile.id);
+                let y1 = coordinates1[0];
+                let x1 = coordinates1[1];
 
-                let id2 = hex_tile.id.substring(1).split('_').map(x => +x);
-                let y2 = id2[0];
-                let x2 = id2[1];
+                let coordinates2 = yxFromId(hex_tile.id);
+                let y2 = coordinates2[0];
+                let x2 = coordinates2[1];
 
                 let dx = Math.abs(x1 - x2);
                 let dy = Math.abs(y1 - y2);
