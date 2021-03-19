@@ -126,28 +126,19 @@
 
         // TBD: Check nplayers;
 
-        // TBD: Use objects
-        const players = [
-            {
-                color: 'red',
-                score: 0,
-                last_selected_tile: null
-            },
-            {
-                color: 'green',
-                score: 0,
-                last_selected_tile: null
-            },
-            {
-                color: 'blue',
-                score: 0,
-                last_selected_tile: null
-            },
-            {
-                color: 'yellow',
-                score: 0,
-                last_selected_tile: null
+        class Player {
+            constructor(color) {
+                this.color = color;
+                this.score = 0;
+                this.last_selected_tile = null;
             }
+        }
+
+        let players = [
+            new Player('red'),
+            new Player('green'),
+            new Player('blue'),
+            new Player('yellow')
         ];
     
         setBoard(width, height, nplayers);
