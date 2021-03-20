@@ -72,11 +72,6 @@
                 background-color:aqua;
             }
 
-            .hex_tile_hidden,
-            .hex_tile_hidden > .hex {
-                display: none;
-            }
-
             .hex_tile:hover {
                 background-color:darkslateblue;
             }
@@ -104,10 +99,17 @@
             .score {
                 font-size: 30px;
                 position: relative;
+                padding-left: 30px;
+                padding-right: 30px;
+
                 /* DEBUG */
                 /* border-width: 1px; */
                 /* border-color: black; */
                 /* border-style: solid; */
+            }
+
+            .active_player {
+                background-color: aqua;
             }
         </style>
     </head>
@@ -216,8 +218,16 @@
             element = element.parentElement;
 
             if (selectElementForPlayer(element, player_index)) {
-                player_index = (player_index + 1) % nplayers;
+                nextPlayer();
             }
+        }
+
+        function nextPlayer() {
+            let score = document.querySelector('#player' + player_index);
+            score.classList.remove('active_player');
+            player_index = (player_index + 1) % nplayers;
+            score = document.querySelector('#player' + player_index);
+            score.classList.add('active_player');
         }
 
         function setBoard(width, height, nplayers) {
@@ -251,68 +261,72 @@
 
             for (k = 0; k < nplayers; ++k) {
                 let score = document.createElement('div');
+                score.id = 'player' + k;
                 score.className = 'score';
+                if (k == 0) {
+                    score.classList.add('active_player');
+                }
                 score.style.color = players[k].color;
                 score.innerHTML = 'Score: 0';
                 scoreboard.appendChild(score);
             }
         }
 
-        function allPlayersPositions() {
-            let positions = [];
-            for (i = 0; i < nplayers; ++i) {
-                if (players[i].last_selected_tile != null) {
-                    positions.push(yxFromId(players[i].last_selected_tile.id))
-                }
-            }
-            return positions;
-        }
+        // function allPlayersPositions() {
+        //     let positions = [];
+        //     for (i = 0; i < nplayers; ++i) {
+        //         if (players[i].last_selected_tile != null) {
+        //             positions.push(yxFromId(players[i].last_selected_tile.id))
+        //         }
+        //     }
+        //     return positions;
+        // }
 
-        function otherPlayersPositions(x, y) {
-            return allPlayersPositions().filter(
-                (position) => { return (position[0] != y) || (position[1] != x); }
-            );
-        }
+        // function otherPlayersPositions(x, y) {
+        //     return allPlayersPositions().filter(
+        //         (position) => { return (position[0] != y) || (position[1] != x); }
+        //     );
+        // }
 
-        function otherPlayersInColumnPositions(x, y) {
-            return otherPlayersPositions(x, y).filter(
-                (position) => { return (position[1] == x); }
-            );
-        }
+        // function otherPlayersInColumnPositions(x, y) {
+        //     return otherPlayersPositions(x, y).filter(
+        //         (position) => { return (position[1] == x); }
+        //     );
+        // }
 
-        function otherPlayersInColumnYs(x, y) {
-            return otherPlayersInColumnPositions(x, y).map(position => position[0]);
-        }
+        // function otherPlayersInColumnYs(x, y) {
+        //     return otherPlayersInColumnPositions(x, y).map(position => position[0]);
+        // }
 
-        function columnMinMax(x1, y1) {
-            let ymin = y1;
-            let ymax = y1;
-            let id;
-            let hex_tile;
-            let other = otherPlayersInColumnYs(x1, y1);
+        // function columnMinMax(x1, y1) {
+        //     let ymin = y1;
+        //     let ymax = y1;
+        //     let id;
+        //     let hex_tile;
+        //     let other = otherPlayersInColumnYs(x1, y1);
 
-            while (ymin >= 0) {
-                id = '#_' + ymin + '_' + x1;
-                hex_tile = document.querySelector(id);
-                if (hex_tile.style.visibility == 'hidden' ||
-                    other.includes(ymin)) {
-                    break;
-                }
-                ymin -= 1;
-            }
+        //     while (ymin >= 0) {
+        //         id = '#_' + ymin + '_' + x1;
+        //         hex_tile = document.querySelector(id);
+        //         if (hex_tile.style.visibility == 'hidden' ||
+        //             other.includes(ymin)) {
+        //             break;
+        //         }
+        //         ymin -= 1;
+        //     }
 
-            while (ymax < height) {
-                id = '#_' + ymax + '_' + x1;
-                hex_tile = document.querySelector(id);
-                if (hex_tile.style.visibility == 'hidden' ||
-                    other.includes(ymax)) {
-                    break;
-                }
-                ymax += 1;
-            }
+        //     while (ymax < height) {
+        //         id = '#_' + ymax + '_' + x1;
+        //         hex_tile = document.querySelector(id);
+        //         if (hex_tile.style.visibility == 'hidden' ||
+        //             other.includes(ymax)) {
+        //             break;
+        //         }
+        //         ymax += 1;
+        //     }
 
-            return {ymin, ymax};
-        }
+        //     return {ymin, ymax};
+        // }
 
         function yxFromId(id) {
             return id.substring(1).split('_').map(x => +x);
