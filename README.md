@@ -7,3 +7,4 @@ https://gkocot.github.io/fish/fish.html?width=12&height=6&players=2
 - Code cleanup, Game class, Board class;
 - Remove player_index parameter from most of the functions, it is global variable;
 - (-1) not dselected tile constant;
+- Generate nplayers instead of maxmimum up to 4 players
