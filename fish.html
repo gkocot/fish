@@ -1,4 +1,4 @@
-<!-- file:///D:/html/fish.html?width=16&height=7&players=4 -->
+<!-- file:///D:/fish/fish.html?width=16&height=7&players=4 -->
 <!DOCTYPE html>
 <html>
     <head>
@@ -382,6 +382,10 @@
                 }
             }
 
+            // Better description
+            // Always do +/- one step in x
+            // Depending on the condition do -1,0,1 step in y direction
+            // so it is y = 2x +/- margin
             while (x1 != x2 || y1 != y2) {
                 if (board[y1 + dy1][x1 + dx] == -1) {
                     x1 += dx;
