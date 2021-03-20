@@ -129,6 +129,15 @@
                 /* border-style: solid; */
             }
 
+            .score:hover {
+                background-color: aqua;
+
+            }
+
+            /* .score:active {
+                background-color: aqua;
+            } */
+
             .active_player {
                 background-color: aqua;
             }
@@ -141,6 +150,7 @@
     </body>
     <script>
         let player_index = 0;
+        let finish_mode = -1;
 
         const params = new URLSearchParams(window.location.search);
         const width = params.get('width');
@@ -276,16 +286,25 @@
             let hex_tile = hexTileFromEvent(e);
 
             if (selectElementForPlayer(hex_tile, player_index)) {
-                nextPlayer();
+                if (finish_mode == -1) {
+                    setPlayer((player_index + 1) % nplayers);
+                }
             }
         }
 
-        function nextPlayer() {
-            let score = document.querySelector('#score_player' + player_index);
-            score.classList.remove('active_player');
-            player_index = (player_index + 1) % nplayers;
-            score = document.querySelector('#score_player' + player_index);
-            score.classList.add('active_player');
+        function scoreOnClick(e) {
+            let score = e.target;
+            // Get the player index from score id (the last number) e.g. 'score_player0'.
+            finish_mode = parseInt(score.id.substring(score.id.length - 1));
+            setPlayer(finish_mode);
+        }
+
+        function setPlayer(next_player) {
+                let score = document.querySelector('#score_player' + player_index);
+                score.classList.remove('active_player');
+                player_index = next_player;
+                score = document.querySelector('#score_player' + player_index);
+                score.classList.add('active_player');
         }
 
         function setBoard(width, height, nplayers) {
@@ -302,7 +321,7 @@
                     hex_tile.className = 'hex_tile';
                     hex_tile.id = '_' + j + '_' + i;
                     hex_tile.addEventListener('click', tileOnClick, false);
-                    hex_tile.addEventListener('mouseover', tileOnMouseover, false);                    
+                    hex_tile.addEventListener('mouseover', tileOnMouseover, false);
                 
                     let hex_img = document.createElement('img');
                     hex_img.className = 'hex_img';
@@ -327,6 +346,7 @@
                 }
                 score.classList.add('color_player' + k);
                 score.innerHTML = 'Score: 0';
+                score.addEventListener('click', scoreOnClick, false);
                 scoreboard.appendChild(score);
             }
         }
