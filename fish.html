@@ -343,11 +343,6 @@
             }
 
             tileOnMouseover(e) {
-                // // Static variable first initialization
-                // if (typeof this.tileOnMouseover.hex_tile == 'undefined') {
-                //     this.tileOnMouseover.hex_tile = null;
-                // }
-
                 // Remove previously highlighted tile if any
                 if (Game.prev_mouse_over_hex_tile != null) {
                     Game.prev_mouse_over_hex_tile.classList.remove('valid_target');
@@ -365,7 +360,7 @@
                     }
                 }
 
-                // Highlight new tile it it is a valid target for active player
+                // Highlight new tile if it is a valid target for active player
                 let hex_tile = this.hexTileFromEvent(e);
                 let player = this.players[this.player_index];
                 if (player.isValidTarget(hex_tile)) {
