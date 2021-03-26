@@ -1,4 +1,4 @@
-<!-- file:///D:/fish/fish.html?width=16&height=7&players=4 -->
+<!-- https://gkocot.github.io/fish/fish.html?width=12&height=6&players=2&pawns=2 -->
 <!DOCTYPE html>
 <html>
     <head>
@@ -13,11 +13,6 @@
 
             body {
                 background-color: cornflowerblue;
-
-                /* DEBUG */
-                /* border-width: 1px; */
-                /* border-color: black; */
-                /* border-style: solid; */
             }
 
             .game {
@@ -106,15 +101,18 @@
                 height: 90%;
             }
 
+            .hex_img_pawn {
+                opacity: 0.9
+            }
+
+            .hex_img_active_pawn {
+                opacity: 0.5
+            }
+
             .scoreboard {
                 margin-left: 60px;
                 display: inline-block;
                 position: absolute;
-                
-                /* DEBUG */
-                /* border-width: 1px; */
-                /* border-color: black; */
-                /* border-style: solid; */
             }
 
             .score {
@@ -122,21 +120,11 @@
                 position: relative;
                 padding-left: 30px;
                 padding-right: 30px;
-
-                /* DEBUG */
-                /* border-width: 1px; */
-                /* border-color: black; */
-                /* border-style: solid; */
             }
 
             .score:hover {
                 background-color: aqua;
-
             }
-
-            /* .score:active {
-                background-color: aqua;
-            } */
 
             .active_player {
                 background-color: aqua;
@@ -149,6 +137,7 @@
         </div>
     </body>
     <script>
+        // TBD: Move inside Game class.
         let player_index = 0;
         let finish_mode = -1;
 
@@ -156,22 +145,108 @@
         const width = params.get('width');
         const height = params.get('height');
         const nplayers = params.get('players');
+        const npawns = params.get('pawns');
 
         // TBD: Check nplayers;
 
         class Player {
-            constructor() {
+            constructor(player_number) {
+                this.player_number = player_number;
                 this.score = 0;
-                this.last_selected_tile = null;
+                this.state = 0; // state < npawns => set pawn n, state == npawns => play 
+                this.active_pawn_hex_tile = null;
+            }
+
+            isValidTarget(hex_tile) {
+                let coordinates2 = yxFromId(hex_tile.id);
+                let y2 = coordinates2[0];
+                let x2 = coordinates2[1];
+
+                // When setting pawns, any unocupied tile can be selected.
+                if (this.state < npawns) {
+                    return board[y2][x2] == -1;
+                }
+                else {
+                    let coordinates1 = yxFromId(this.active_pawn_hex_tile.id);
+                    let y1 = coordinates1[0];
+                    let x1 = coordinates1[1];
+
+                    return isValidPath(x1, y1, x2, y2);
+                }
+            }
+
+            setPawnOnTile(hex_tile) {                
+                let coordinates = yxFromId(hex_tile.id);
+                let y = coordinates[0];
+                let x = coordinates[1];
+
+                if (this.active_pawn_hex_tile != null) {
+                    let hex_img = this.active_pawn_hex_tile.firstElementChild;
+                    hex_img.classList.remove('hex_img_active_pawn');
+                    hex_img.classList.add('hex_img_pawn');
+                }
+
+                hex_tile.classList.add('bgcolor_player' + this.player_number);
+                let hex_img = hex_tile.firstElementChild;
+                hex_img.classList.add('hex_img_active_pawn');
+                this.active_pawn_hex_tile = hex_tile;
+
+                board[y][x] = this.player_number;
+            }
+
+            updateScore() {
+                let hex_tile = this.active_pawn_hex_tile;
+
+                // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
+                // The value for updating score is the 1st character after the last '/'.
+                let hex_img = hex_tile.firstElementChild;
+                this.score = this.score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
+
+                let scoreboard = document.querySelector('.scoreboard');
+                scoreboard.childNodes[player_index].innerHTML = 'Score: ' + this.score;
+
+                // Hide the previously selected element.
+                hex_tile.style.visibility = 'hidden';                
+            }
+
+            selectElement(hex_tile) {
+                let coordinates = yxFromId(hex_tile.id);
+                let y = coordinates[0];
+                let x = coordinates[1];
+
+                // Setting pawns phase.
+                if (this.state < npawns) {                    
+                    if (this.isValidTarget(hex_tile)) {
+                        this.state += 1;
+
+                        this.setPawnOnTile(hex_tile);
+                        return true;
+                    }
+                }
+
+                // One of player's pawns selected again.
+                if (board[y][x] == this.player_number) {
+                    this.setPawnOnTile(hex_tile);
+                    return false;
+                }
+
+                // Playing game phase.
+                if (this.isValidTarget(hex_tile)) {
+                    this.updateScore();
+                    this.setPawnOnTile(hex_tile);
+                    return true;
+                }
+
+                return false;
             }
         }
 
         // TBD: Generate nplayers instead of fixed number of players
         let players = [
-            new Player(),
-            new Player(),
-            new Player(),
-            new Player()
+            new Player(0),
+            new Player(1),
+            new Player(2),
+            new Player(3)
         ];
 
         let board = [];
@@ -181,60 +256,6 @@
                 board[i][j] = -1;
             }
         }
-
-        // class Game {
-        //     constructor(width, height, nplayers) {
-        //         const t
-        //         this.board = [];
-        //         for (let i = 0; i < height; ++i) {
-        //             this.board[i] = [];
-        //             for (let j = 0; j < width; ++j) {
-        //                 this.board[i][j] = -1;
-        //             }
-        //         }
-        //         this.renderBoard(width, height, nplayers);
-        //     }
-
-        //     renderBoard(width, height, nplayers) {
-        //         let board = document.querySelector('.board');
-
-        //         for (let j = 0; j < height; ++j) {
-        //             let row = document.createElement('div');
-        //             row.className = 'row';
-        //             for (let i = 0; i < width; ++i) {
-        //                 let cell = document.createElement('div');
-        //                 cell.className = 'cell';
-
-        //                 let hex_tile = document.createElement('div');
-        //                 hex_tile.className = 'hex_tile';
-        //                 hex_tile.id = '_' + j + '_' + i;
-        //                 hex_tile.addEventListener('click', tileOnClick, false);
-                    
-        //                 let hex_img = document.createElement('img');
-        //                 hex_img.className = 'hex_img';
-        //                 let n = Math.floor(Math.random() * 3) + 1;   
-        //                 hex_img.src = n + 'fish.jpg';
-
-        //                 hex_tile.appendChild(hex_img);
-        //                 cell.appendChild(hex_tile);
-        //                 row.appendChild(cell);
-        //             }
-        //             board.appendChild(row);
-        //         }
-
-        //         let scoreboard = document.querySelector('.scoreboard');
-
-        //         for (let k = 0; k < nplayers; ++k) {
-        //             let score = document.createElement('div');
-        //             score.className = 'score';
-        //             score.style.color = players[k].color;
-        //             score.innerHTML = 'Score: 0';
-        //             scoreboard.appendChild(score);
-        //         }
-        //     }
-        // }
-
-        //let game = new Game(width, height, nplayers);
 
         setBoard(width, height, nplayers);
 
@@ -262,8 +283,9 @@
             }
 
             // Highlight new tile it it is a valid target for active player
-            let hex_tile = hexTileFromEvent(e);            
-            if (isValidTargetForPlayer(hex_tile, player_index)) {
+            let hex_tile = hexTileFromEvent(e);
+            let player = players[player_index];
+            if (player.isValidTarget(hex_tile)) {
                 tileOnMouseover.hex_tile = hex_tile;
                 hex_tile.classList.add('valid_target');
                 hex_tile.classList.add('bgcolor_player' + player_index);
@@ -284,8 +306,8 @@
 
         function tileOnClick(e) {
             let hex_tile = hexTileFromEvent(e);
-
-            if (selectElementForPlayer(hex_tile, player_index)) {
+            let player = players[player_index];
+            if (player.selectElement(hex_tile)) {
                 if (finish_mode == -1) {
                     setPlayer((player_index + 1) % nplayers);
                 }
@@ -431,64 +453,6 @@
             }
 
             return true;
-        }
-
-        function isValidTargetForPlayer(hex_tile, player_index) {
-            let coordinates2 = yxFromId(hex_tile.id);
-            let y2 = coordinates2[0];
-            let x2 = coordinates2[1];
-
-            if (players[player_index].last_selected_tile == null) {
-                // 1st move, any unocupied tile can be selected.
-                return board[y2][x2] == -1;
-            }
-            else {
-                let coordinates1 = yxFromId(players[player_index].last_selected_tile.id);
-                let y1 = coordinates1[0];
-                let x1 = coordinates1[1];
-
-                return isValidPath(x1, y1, x2, y2);
-            }
-        }
-
-        function selectElementForPlayer(hex_tile, player_index) {
-            if (isValidTargetForPlayer(hex_tile, player_index)) {
-                updateScoreForPlayer(player_index);
-
-                // Mark the current hex_tile.
-                hex_tile.classList.add('bgcolor_player' + player_index);
-                players[player_index].last_selected_tile = hex_tile;                
-                let hex_img = hex_tile.firstElementChild;
-                hex_img.style.opacity = 0.5;
-
-                // Save information that this tile has been visited by player.
-                let coordinates = yxFromId(hex_tile.id);
-                let y = coordinates[0];
-                let x = coordinates[1];
-                board[y][x] = player_index;
-                return true;
-            }
-
-            return false;
-        }
-
-        function updateScoreForPlayer(player_index) {
-            let hex_tile = players[player_index].last_selected_tile;
-
-            if (hex_tile != null) {
-                // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
-                // The value for updating score is the 1st character after the last '/'.
-                let hex_img = hex_tile.firstElementChild;
-                let score = players[player_index].score;
-                score = score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
-                players[player_index].score = score;
-
-                let scoreboard = document.querySelector('.scoreboard');
-                scoreboard.childNodes[player_index].innerHTML = 'Score: ' + score;
-
-                // Hide the previously selected element.
-                hex_tile.style.visibility = 'hidden';                
-            }
         }
     </script>
 </html>
