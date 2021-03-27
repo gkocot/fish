@@ -143,6 +143,7 @@
         const nplayers = params.get('players');
         const npawns = params.get('pawns');
 
+        // hex_tile.id stores row/colum coordinates, it has form of '_y_x'.
         function yxFromId(id) {
             return id.substring(1).split('_').map(x => +x);
         }
@@ -153,7 +154,7 @@
                 this.player_number = player_number;
                 this.score = 0;
                 this.state = 0; // state < npawns => set pawn n, state == npawns => play 
-                this.npawns = npawns;
+                this.npawns = npawns; // Double click removes player's pawns. Player with 0 pawns is skipped during the play.
                 this.active_pawn_hex_tile = null;
             }
 
@@ -199,6 +200,7 @@
                 let y = coordinates[0];
                 let x = coordinates[1];
 
+                // Remove pawn if it belongs to this player.
                 if (this.player_number == this.game.board[y][x]) {
                     this.updateScore(hex_tile);                    
                     this.npawns -= 1;
@@ -256,7 +258,7 @@
             }
 
             // Check if valid path exists from position A:(y1,x1) to position B:(y2,x2).
-            // No gaps or other playier on the path from  A to B.
+            // No gaps or other pawns on the path from  A to B.
             isValidPath(x1, y1, x2, y2) {
                 // The same tile selected again.
                 if (x1 == x2 && y1 == y2)
