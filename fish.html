@@ -153,6 +153,7 @@
                 this.player_number = player_number;
                 this.score = 0;
                 this.state = 0; // state < npawns => set pawn n, state == npawns => play 
+                this.npawns = npawns;
                 this.active_pawn_hex_tile = null;
             }
 
@@ -193,9 +194,24 @@
                 this.game.board[y][x] = this.player_number;
             }
 
-            updateScore() {
-                let hex_tile = this.active_pawn_hex_tile;
+            removePawn(hex_tile) {
+                let coordinates = yxFromId(hex_tile.id);
+                let y = coordinates[0];
+                let x = coordinates[1];
 
+                if (this.player_number == this.game.board[y][x]) {
+                    this.updateScore(hex_tile);                    
+                    this.npawns -= 1;
+                    if (this.active_pawn_hex_tile == hex_tile) {
+                        this.active_pawn_hex_tile = null;
+                    }
+                    return true;
+                }
+
+                return false;
+            }
+
+            updateScore(hex_tile) {
                 // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
                 // The value for updating score is the 1st character after the last '/'.
                 let hex_img = hex_tile.firstElementChild;
@@ -231,7 +247,7 @@
 
                 // Playing game phase.
                 if (this.isValidTarget(hex_tile)) {
-                    this.updateScore();
+                    this.updateScore(this.active_pawn_hex_tile);
                     this.setPawnOnTile(hex_tile);
                     return true;
                 }
@@ -325,7 +341,8 @@
             constructor() {
                 this.player_index = 0;
                 this.finish_mode = -1;
-                
+                this.npawns = nplayers * npawns;
+
                 this.board = [];
                 for (let i = 0; i < height; ++i) {
                     this.board[i] = [];
@@ -375,7 +392,18 @@
                 let player = this.players[this.player_index];
                 if (player.selectElement(hex_tile)) {
                     if (this.finish_mode == -1) {
-                        this.setPlayer((this.player_index + 1) % nplayers);
+                        while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
+                    }
+                }
+            }
+
+            tileOnDoubleClick(e) {
+                let hex_tile = this.hexTileFromEvent(e);
+                let player = this.players[this.player_index];                
+                if (player.removePawn(hex_tile)) {
+                    this.npawns -= 1;
+                    if (this.finish_mode == -1) {
+                        while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
                     }
                 }
             }
@@ -398,6 +426,7 @@
                 this.player_index = next_player;
                 score = document.querySelector('#score_player' + this.player_index);
                 score.classList.add('active_player');
+                return this.players[next_player].npawns > 0;
             }
 
             scoreOnClick(e) {
@@ -421,6 +450,7 @@
                         hex_tile.className = 'hex_tile';
                         hex_tile.id = '_' + j + '_' + i;
                         hex_tile.addEventListener('click', tileOnClick, false);
+                        hex_tile.addEventListener('dblclick', tileOnDoubleClick, false);
                         hex_tile.addEventListener('mouseover', tileOnMouseover, false);
                     
                         let hex_img = document.createElement('img');
@@ -458,6 +488,10 @@
 
         function tileOnClick(e) {
             game.tileOnClick(e);
+        }
+
+        function tileOnDoubleClick(e) {
+            game.tileOnDoubleClick(e);
         }
 
         function scoreOnClick(e) {
