@@ -26,13 +26,81 @@
                 display: inline-block;
 
                 /* DEBUG */
-                /* border-width: 1px; */
-                /* border-color: black; */
-                /* border-style: solid; */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .column_headers {
+                text-align: left;
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .column_header,
+            .row_header {
+                font-size: 40px;
+                text-align: center;
+                display: inline-block;
+                position: relative;
+            }
+
+            .column_header:first-of-type {                
+                width: 142px;
+                margin-left: 60px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .column_header:nth-child(odd) {
+                width: 142px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .column_header:nth-child(even) {
+                width: 102px;
+                top: 0px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .row_header_and_row {
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
+            }
+
+            .row_header {
+                top: -30px;
+                margin-right: 5px;
+                width: 40px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
             }
 
             .row {
+                display: inline-block;
                 margin-bottom: 24px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
             }
 
             .cell {
@@ -43,6 +111,11 @@
                 position: relative;
                 margin-left: 21px;
                 margin-top: 21px;
+
+                /* DEBUG */
+                /* border-width: 1px;
+                border-color: black;
+                border-style: solid; */
             }
 
             .cell:nth-child(even) {
@@ -220,7 +293,7 @@
                 this.score = this.score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
 
                 let scoreboard = document.querySelector('.scoreboard');
-                scoreboard.childNodes[this.game.player_index].innerHTML = 'Score: ' + this.score;
+                scoreboard.childNodes[this.game.player_index].innerText = 'Score: ' + this.score;
 
                 // Hide the previously selected element.
                 hex_tile.style.visibility = 'hidden';                
@@ -438,12 +511,37 @@
                 this.setPlayer(this.finish_mode);
             }
 
+            //<div class="header"><div class="aa"></div><div class="bb">A</div><div class="bb">B</div><div class="bb">C</div><div class="bb">D</div><div class="bb">E</div><div class="bb">F</div></div>
+
             renderBoard(width, height, nplayers) {
                 let board = document.querySelector('.board');
 
+                let column_headers = document.createElement('div');
+                column_headers.className = 'column_headers';
+                
+                for (let i = 0; i < width; ++i) {
+                    let column_header = document.createElement('div');
+                    column_header.className = 'column_header';
+                    column_header.innerText = String.fromCharCode('A'.charCodeAt(0) + i);
+                    column_headers.appendChild(column_header);
+                }
+
+                board.appendChild(column_headers);
+
                 for (let j = 0; j < height; ++j) {
+                    let row_header_and_row = document.createElement('div');
+                    row_header_and_row.className = 'row_header_and_row';
+
+                    let row_header = document.createElement('div');
+                    row_header.className = 'row_header';
+                    row_header.innerText = j;
+
                     let row = document.createElement('div');
                     row.className = 'row';
+
+                    row_header_and_row.appendChild(row_header);
+                    row_header_and_row.appendChild(row);
+
                     for (let i = 0; i < width; ++i) {
                         let cell = document.createElement('div');
                         cell.className = 'cell';
@@ -464,7 +562,8 @@
                         cell.appendChild(hex_tile);
                         row.appendChild(cell);
                     }
-                    board.appendChild(row);
+
+                    board.appendChild(row_header_and_row);
                 }
 
                 let scoreboard = document.querySelector('.scoreboard');
@@ -477,7 +576,7 @@
                         score.classList.add('active_player');
                     }
                     score.classList.add('color_player' + k);
-                    score.innerHTML = 'Score: 0';
+                    score.innerText = 'Score: 0';
                     score.addEventListener('click', scoreOnClick, false);
                     scoreboard.appendChild(score);
                 }
