@@ -189,10 +189,10 @@
             }
 
             .score {
-                font-size: 30px;
+                text-align: center;
+                width: 150px;
+                font-size: 40px;
                 position: relative;
-                padding-left: 30px;
-                padding-right: 30px;
             }
 
             .score:hover {
@@ -293,7 +293,7 @@
                 this.score = this.score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
 
                 let scoreboard = document.querySelector('.scoreboard');
-                scoreboard.childNodes[this.game.player_index].innerText = 'Score: ' + this.score;
+                scoreboard.childNodes[this.game.player_index].innerText = this.score;
 
                 // Hide the previously selected element.
                 hex_tile.style.visibility = 'hidden';                
@@ -511,8 +511,6 @@
                 this.setPlayer(this.finish_mode);
             }
 
-            //<div class="header"><div class="aa"></div><div class="bb">A</div><div class="bb">B</div><div class="bb">C</div><div class="bb">D</div><div class="bb">E</div><div class="bb">F</div></div>
-
             renderBoard(width, height, nplayers) {
                 let board = document.querySelector('.board');
 
@@ -576,7 +574,7 @@
                         score.classList.add('active_player');
                     }
                     score.classList.add('color_player' + k);
-                    score.innerText = 'Score: 0';
+                    score.innerText = '0';
                     score.addEventListener('click', scoreOnClick, false);
                     scoreboard.appendChild(score);
                 }
