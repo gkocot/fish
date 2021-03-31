@@ -208,395 +208,395 @@
         <div class="game">
             <div class="board"></div><div class="scoreboard"></div>
         </div>
-    </body>
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const width = params.get('width');
-        const height = params.get('height');
-        const nplayers = params.get('players');
-        const npawns = params.get('pawns');
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            const width = params.get('width');
+            const height = params.get('height');
+            const nplayers = params.get('players');
+            const npawns = params.get('pawns');
 
-        // hex_tile.id stores row/colum coordinates, it has form of '_y_x'.
-        function yxFromId(id) {
-            return id.substring(1).split('_').map(x => +x);
-        }
-
-        class Player {
-            constructor(game, player_number) {
-                this.game = game;
-                this.player_number = player_number;
-                this.score = 0;
-                this.state = 0; // state < npawns => set pawn n, state == npawns => play 
-                this.npawns = npawns; // Double click removes player's pawns. Player with 0 pawns is skipped during the play.
-                this.active_pawn_hex_tile = null;
+            // hex_tile.id stores row/colum coordinates, it has form of '_y_x'.
+            function yxFromId(id) {
+                return id.substring(1).split('_').map(x => +x);
             }
 
-            isValidTarget(hex_tile) {
-                let coordinates2 = yxFromId(hex_tile.id);
-                let y2 = coordinates2[0];
-                let x2 = coordinates2[1];
-
-                // When setting pawns, any unocupied tile can be selected.
-                if (this.state < npawns) {
-                    return this.game.board[y2][x2] == -1;
-                }
-                else {
-                    let coordinates1 = yxFromId(this.active_pawn_hex_tile.id);
-                    let y1 = coordinates1[0];
-                    let x1 = coordinates1[1];
-
-                    return this.isValidPath(x1, y1, x2, y2);
-                }
-            }
-
-            setPawnOnTile(hex_tile) {                
-                let coordinates = yxFromId(hex_tile.id);
-                let y = coordinates[0];
-                let x = coordinates[1];
-
-                if (this.active_pawn_hex_tile != null) {
-                    let hex_img = this.active_pawn_hex_tile.firstElementChild;
-                    hex_img.classList.remove('hex_img_active_pawn');
-                    hex_img.classList.add('hex_img_pawn');
+            class Player {
+                constructor(game, player_number) {
+                    this.game = game;
+                    this.player_number = player_number;
+                    this.score = 0;
+                    this.state = 0; // state < npawns => set pawn n, state == npawns => play 
+                    this.npawns = npawns; // Double click removes player's pawns. Player with 0 pawns is skipped during the play.
+                    this.active_pawn_hex_tile = null;
                 }
 
-                hex_tile.classList.add('bgcolor_player' + this.player_number);
-                let hex_img = hex_tile.firstElementChild;
-                hex_img.classList.add('hex_img_active_pawn');
-                this.active_pawn_hex_tile = hex_tile;
+                isValidTarget(hex_tile) {
+                    let coordinates2 = yxFromId(hex_tile.id);
+                    let y2 = coordinates2[0];
+                    let x2 = coordinates2[1];
 
-                this.game.board[y][x] = this.player_number;
-            }
-
-            removePawn(hex_tile) {
-                let coordinates = yxFromId(hex_tile.id);
-                let y = coordinates[0];
-                let x = coordinates[1];
-
-                // Remove pawn if it belongs to this player.
-                if (this.player_number == this.game.board[y][x]) {
-                    this.updateScore(hex_tile);                    
-                    this.npawns -= 1;
-                    if (this.active_pawn_hex_tile == hex_tile) {
-                        this.active_pawn_hex_tile = null;
+                    // When setting pawns, any unocupied tile can be selected.
+                    if (this.state < npawns) {
+                        return this.game.board[y2][x2] == -1;
                     }
-                    return true;
+                    else {
+                        let coordinates1 = yxFromId(this.active_pawn_hex_tile.id);
+                        let y1 = coordinates1[0];
+                        let x1 = coordinates1[1];
+
+                        return this.isValidPath(x1, y1, x2, y2);
+                    }
                 }
 
-                return false;
-            }
+                setPawnOnTile(hex_tile) {                
+                    let coordinates = yxFromId(hex_tile.id);
+                    let y = coordinates[0];
+                    let x = coordinates[1];
 
-            updateScore(hex_tile) {
-                // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
-                // The value for updating score is the 1st character after the last '/'.
-                let hex_img = hex_tile.firstElementChild;
-                this.score = this.score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
+                    if (this.active_pawn_hex_tile != null) {
+                        let hex_img = this.active_pawn_hex_tile.firstElementChild;
+                        hex_img.classList.remove('hex_img_active_pawn');
+                        hex_img.classList.add('hex_img_pawn');
+                    }
 
-                let scoreboard = document.querySelector('.scoreboard');
-                scoreboard.childNodes[this.game.player_index].innerText = this.score;
+                    hex_tile.classList.add('bgcolor_player' + this.player_number);
+                    let hex_img = hex_tile.firstElementChild;
+                    hex_img.classList.add('hex_img_active_pawn');
+                    this.active_pawn_hex_tile = hex_tile;
 
-                // Hide the previously selected element.
-                hex_tile.style.visibility = 'hidden';                
-            }
+                    this.game.board[y][x] = this.player_number;
+                }
 
-            selectElement(hex_tile) {
-                let coordinates = yxFromId(hex_tile.id);
-                let y = coordinates[0];
-                let x = coordinates[1];
+                removePawn(hex_tile) {
+                    let coordinates = yxFromId(hex_tile.id);
+                    let y = coordinates[0];
+                    let x = coordinates[1];
 
-                // Setting pawns phase.
-                if (this.state < npawns) {                    
+                    // Remove pawn if it belongs to this player.
+                    if (this.player_number == this.game.board[y][x]) {
+                        this.updateScore(hex_tile);                    
+                        this.npawns -= 1;
+                        if (this.active_pawn_hex_tile == hex_tile) {
+                            this.active_pawn_hex_tile = null;
+                        }
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                updateScore(hex_tile) {
+                    // Get the image source of selected element, the names are '<path>/1fish.jpg', '<path>/2fish.jpg' ...
+                    // The value for updating score is the 1st character after the last '/'.
+                    let hex_img = hex_tile.firstElementChild;
+                    this.score = this.score + parseInt(hex_img.src.charAt(hex_img.src.lastIndexOf('/') + 1));
+
+                    let scoreboard = document.querySelector('.scoreboard');
+                    scoreboard.childNodes[this.game.player_index].innerText = this.score;
+
+                    // Hide the previously selected element.
+                    hex_tile.style.visibility = 'hidden';                
+                }
+
+                selectElement(hex_tile) {
+                    let coordinates = yxFromId(hex_tile.id);
+                    let y = coordinates[0];
+                    let x = coordinates[1];
+
+                    // Setting pawns phase.
+                    if (this.state < npawns) {                    
+                        if (this.isValidTarget(hex_tile)) {
+                            this.state += 1;
+
+                            this.setPawnOnTile(hex_tile);
+                            return true;
+                        }
+                    }
+
+                    // One of player's pawns selected again.
+                    if (this.game.board[y][x] == this.player_number) {
+                        this.setPawnOnTile(hex_tile);
+                        return false;
+                    }
+
+                    // Playing game phase.
                     if (this.isValidTarget(hex_tile)) {
-                        this.state += 1;
-
+                        this.updateScore(this.active_pawn_hex_tile);
                         this.setPawnOnTile(hex_tile);
                         return true;
                     }
-                }
 
-                // One of player's pawns selected again.
-                if (this.game.board[y][x] == this.player_number) {
-                    this.setPawnOnTile(hex_tile);
                     return false;
                 }
 
-                // Playing game phase.
-                if (this.isValidTarget(hex_tile)) {
-                    this.updateScore(this.active_pawn_hex_tile);
-                    this.setPawnOnTile(hex_tile);
-                    return true;
-                }
+                // Check if valid path exists from position A:(y1,x1) to position B:(y2,x2).
+                // No gaps or other pawns on the path from  A to B.
+                isValidPath(x1, y1, x2, y2) {
+                    // The same tile selected again.
+                    if (x1 == x2 && y1 == y2)
+                        return false;
 
-                return false;
-            }
+                    // We are walking either up/down the column or along |x| = |2y| diagonals (with +/- margin).
+                    // Walking the rows is divided into step1 (dx, dy1) and step2 (dx, dy2).
+                    // Depending on ralative position of points A and B we need appropriate values for dx, dy1 and dy2.
+                    let dx = 0; // Move up/down in the column.
+                    if (x2 < x1) dx = -1; // Move left.
+                    if (x2 > x1) dx = 1; // Move right.
+                    let dy1, dy2;
 
-            // Check if valid path exists from position A:(y1,x1) to position B:(y2,x2).
-            // No gaps or other pawns on the path from  A to B.
-            isValidPath(x1, y1, x2, y2) {
-                // The same tile selected again.
-                if (x1 == x2 && y1 == y2)
-                    return false;
-
-                // We are walking either up/down the column or along |x| = |2y| diagonals (with +/- margin).
-                // Walking the rows is divided into step1 (dx, dy1) and step2 (dx, dy2).
-                // Depending on ralative position of points A and B we need appropriate values for dx, dy1 and dy2.
-                let dx = 0; // Move up/down in the column.
-                if (x2 < x1) dx = -1; // Move left.
-                if (x2 > x1) dx = 1; // Move right.
-                let dy1, dy2;
-
-                if (x1 == x2) {                
-                    // Move up/down in the column.
-                    if (y2 > y1) {
-                        // Move down.
-                        dy1 = 1;
-                        dy2 = 1;
-                    }
-                    if (y2 < y1){
-                        // Move up.
-                        dy1 = -1;
-                        dy2 = -1;
-                    }
-                }
-                else {
-                    // Move along the diagonals.
-                    if (x1 % 2) {
+                    if (x1 == x2) {                
+                        // Move up/down in the column.
                         if (y2 > y1) {
+                            // Move down.
                             dy1 = 1;
-                            dy2 = 0;
+                            dy2 = 1;
                         }
-                        else {
-                            dy1 = 0;
+                        if (y2 < y1){
+                            // Move up.
+                            dy1 = -1;
                             dy2 = -1;
                         }
                     }
                     else {
-                        if (y2 >= y1) {
-                            dy1 = 0;
-                            dy2 = 1;
+                        // Move along the diagonals.
+                        if (x1 % 2) {
+                            if (y2 > y1) {
+                                dy1 = 1;
+                                dy2 = 0;
+                            }
+                            else {
+                                dy1 = 0;
+                                dy2 = -1;
+                            }
                         }
                         else {
-                            dy1 = -1;
-                            dy2 = 0;
+                            if (y2 >= y1) {
+                                dy1 = 0;
+                                dy2 = 1;
+                            }
+                            else {
+                                dy1 = -1;
+                                dy2 = 0;
+                            }
                         }
                     }
-                }
 
-                while (x1 != x2 || y1 != y2) {
-                    if (typeof this.game.board[y1 + dy1] !== 'undefined' &&
-                        typeof this.game.board[y1 + dy1][x1 + dx] !== 'undefined' &&
-                        this.game.board[y1 + dy1][x1 + dx] == -1) {
-                        x1 += dx;
-                        y1 += dy1;
-                    }
-                    else {
-                        return false;
-                    }
-                    
-                    if (x1 != x2 || y1 != y2) {
-                        if (typeof this.game.board[y1 + dy2] !== 'undefined' &&
-                            typeof this.game.board[y1 + dy2][x1 + dx] !== 'undefined' &&
-                            this.game.board[y1 + dy2][x1 + dx] == -1) {
+                    while (x1 != x2 || y1 != y2) {
+                        if (typeof this.game.board[y1 + dy1] !== 'undefined' &&
+                            typeof this.game.board[y1 + dy1][x1 + dx] !== 'undefined' &&
+                            this.game.board[y1 + dy1][x1 + dx] == -1) {
                             x1 += dx;
-                            y1 += dy2;
+                            y1 += dy1;
                         }
                         else {
                             return false;
                         }
+                        
+                        if (x1 != x2 || y1 != y2) {
+                            if (typeof this.game.board[y1 + dy2] !== 'undefined' &&
+                                typeof this.game.board[y1 + dy2][x1 + dx] !== 'undefined' &&
+                                this.game.board[y1 + dy2][x1 + dx] == -1) {
+                                x1 += dx;
+                                y1 += dy2;
+                            }
+                            else {
+                                return false;
+                            }
+                        }
                     }
-                }
 
-                return true;
-            }            
-        }
-
-        class Game {
-            static prev_mouse_over_hex_tile = null;
-
-            constructor() {
-                this.player_index = 0;
-                this.finish_mode = -1;
-                this.npawns = nplayers * npawns;
-
-                this.board = [];
-                for (let i = 0; i < height; ++i) {
-                    this.board[i] = [];
-                    for (let j = 0; j < width; ++j) {
-                        this.board[i][j] = -1;
-                    }
-                }
-
-                this.players = [];
-                for (let i = 0; i < Math.min(nplayers, 4); ++i) {
-                    this.players[i] = new Player(this, i);                    
-                }
-                
-                this.renderBoard(width, height, nplayers);
+                    return true;
+                }            
             }
 
-            tileOnMouseover(e) {
-                // Remove previously highlighted tile if any
-                if (Game.prev_mouse_over_hex_tile != null) {
-                    Game.prev_mouse_over_hex_tile.classList.remove('valid_target');
+            class Game {
+                static prev_mouse_over_hex_tile = null;
+
+                constructor() {
+                    this.player_index = 0;
+                    this.finish_mode = -1;
+                    this.npawns = nplayers * npawns;
+
+                    this.board = [];
+                    for (let i = 0; i < height; ++i) {
+                        this.board[i] = [];
+                        for (let j = 0; j < width; ++j) {
+                            this.board[i][j] = -1;
+                        }
+                    }
+
+                    this.players = [];
+                    for (let i = 0; i < Math.min(nplayers, 4); ++i) {
+                        this.players[i] = new Player(this, i);                    
+                    }
                     
-                    let coordinates = yxFromId(Game.prev_mouse_over_hex_tile.id);
-                    let y = coordinates[0];
-                    let x = coordinates[1];
+                    this.renderBoard(width, height, nplayers);
+                }
+
+                tileOnMouseover(e) {
+                    // Remove previously highlighted tile if any
+                    if (Game.prev_mouse_over_hex_tile != null) {
+                        Game.prev_mouse_over_hex_tile.classList.remove('valid_target');
+                        
+                        let coordinates = yxFromId(Game.prev_mouse_over_hex_tile.id);
+                        let y = coordinates[0];
+                        let x = coordinates[1];
+                        
+                        // Don't remove color from selected tiles
+                        if (this.board[y][x] == -1) {
+                            Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player0');
+                            Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player1');
+                            Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player2');
+                            Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player3');
+                        }
+                    }
+
+                    // Highlight new tile if it is a valid target for active player
+                    let hex_tile = this.hexTileFromEvent(e);
+                    let player = this.players[this.player_index];
+                    if (player.isValidTarget(hex_tile)) {
+                        Game.prev_mouse_over_hex_tile = hex_tile;
+                        hex_tile.classList.add('valid_target');
+                        hex_tile.classList.add('bgcolor_player' + this.player_index);
+                    }
+                }
+
+                tileOnClick(e) {
+                    let hex_tile = this.hexTileFromEvent(e);
+                    let player = this.players[this.player_index];
+                    if (player.selectElement(hex_tile)) {
+                        if (this.finish_mode == -1) {
+                            while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
+                        }
+                    }
+                }
+
+                tileOnDoubleClick(e) {
+                    let hex_tile = this.hexTileFromEvent(e);
+                    let player = this.players[this.player_index];                
+                    if (player.removePawn(hex_tile)) {
+                        this.npawns -= 1;
+                        if (this.finish_mode == -1) {
+                            while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
+                        }
+                    }
+                }
+
+                hexTileFromEvent(e) {
+                    // Either .hex_tile or .hex_image can be clicked, so to always select the .hex_tile
+                    // we find the most nested element which is .hex_image and select its parent.
+                    let element = e.target;
+
+                    while (element.firstElementChild) {
+                        element = element.firstElementChild;
+                    }
                     
-                    // Don't remove color from selected tiles
-                    if (this.board[y][x] == -1) {
-                        Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player0');
-                        Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player1');
-                        Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player2');
-                        Game.prev_mouse_over_hex_tile.classList.remove('bgcolor_player3');
-                    }
+                    return element.parentElement;
                 }
 
-                // Highlight new tile if it is a valid target for active player
-                let hex_tile = this.hexTileFromEvent(e);
-                let player = this.players[this.player_index];
-                if (player.isValidTarget(hex_tile)) {
-                    Game.prev_mouse_over_hex_tile = hex_tile;
-                    hex_tile.classList.add('valid_target');
-                    hex_tile.classList.add('bgcolor_player' + this.player_index);
-                }
-            }
-
-            tileOnClick(e) {
-                let hex_tile = this.hexTileFromEvent(e);
-                let player = this.players[this.player_index];
-                if (player.selectElement(hex_tile)) {
-                    if (this.finish_mode == -1) {
-                        while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
-                    }
-                }
-            }
-
-            tileOnDoubleClick(e) {
-                let hex_tile = this.hexTileFromEvent(e);
-                let player = this.players[this.player_index];                
-                if (player.removePawn(hex_tile)) {
-                    this.npawns -= 1;
-                    if (this.finish_mode == -1) {
-                        while (this.npawns > 0 && this.setPlayer((this.player_index + 1) % nplayers) == false);
-                    }
-                }
-            }
-
-            hexTileFromEvent(e) {
-                // Either .hex_tile or .hex_image can be clicked, so to always select the .hex_tile
-                // we find the most nested element which is .hex_image and select its parent.
-                let element = e.target;
-
-                while (element.firstElementChild) {
-                    element = element.firstElementChild;
-                }
-                
-                return element.parentElement;
-            }
-
-            setPlayer(next_player) {
-                let score = document.querySelector('#score_player' + this.player_index);
-                score.classList.remove('active_player');
-                this.player_index = next_player;
-                score = document.querySelector('#score_player' + this.player_index);
-                score.classList.add('active_player');
-                return this.players[next_player].npawns > 0;
-            }
-
-            scoreOnClick(e) {
-                let score = e.target;
-                // Get the player index from score id (the last number) e.g. 'score_player0'.
-                this.finish_mode = parseInt(score.id.substring(score.id.length - 1));
-                this.setPlayer(this.finish_mode);
-            }
-
-            renderBoard(width, height, nplayers) {
-                let board = document.querySelector('.board');
-
-                let column_headers = document.createElement('div');
-                column_headers.className = 'column_headers';
-                
-                for (let i = 0; i < width; ++i) {
-                    let column_header = document.createElement('div');
-                    column_header.className = 'column_header';
-                    column_header.innerText = String.fromCharCode('A'.charCodeAt(0) + i);
-                    column_headers.appendChild(column_header);
+                setPlayer(next_player) {
+                    let score = document.querySelector('#score_player' + this.player_index);
+                    score.classList.remove('active_player');
+                    this.player_index = next_player;
+                    score = document.querySelector('#score_player' + this.player_index);
+                    score.classList.add('active_player');
+                    return this.players[next_player].npawns > 0;
                 }
 
-                board.appendChild(column_headers);
+                scoreOnClick(e) {
+                    let score = e.target;
+                    // Get the player index from score id (the last number) e.g. 'score_player0'.
+                    this.finish_mode = parseInt(score.id.substring(score.id.length - 1));
+                    this.setPlayer(this.finish_mode);
+                }
 
-                for (let j = 0; j < height; ++j) {
-                    let row_header_and_row = document.createElement('div');
-                    row_header_and_row.className = 'row_header_and_row';
+                renderBoard(width, height, nplayers) {
+                    let board = document.querySelector('.board');
 
-                    let row_header = document.createElement('div');
-                    row_header.className = 'row_header';
-                    row_header.innerText = j;
-
-                    let row = document.createElement('div');
-                    row.className = 'row';
-
-                    row_header_and_row.appendChild(row_header);
-                    row_header_and_row.appendChild(row);
-
+                    let column_headers = document.createElement('div');
+                    column_headers.className = 'column_headers';
+                    
                     for (let i = 0; i < width; ++i) {
-                        let cell = document.createElement('div');
-                        cell.className = 'cell';
-
-                        let hex_tile = document.createElement('div');
-                        hex_tile.className = 'hex_tile';
-                        hex_tile.id = '_' + j + '_' + i;
-                        hex_tile.addEventListener('click', tileOnClick, false);
-                        hex_tile.addEventListener('dblclick', tileOnDoubleClick, false);
-                        hex_tile.addEventListener('mouseover', tileOnMouseover, false);
-                    
-                        let hex_img = document.createElement('img');
-                        hex_img.className = 'hex_img';
-                        let n = Math.floor(Math.random() * 3) + 1;   
-                        hex_img.src = n + 'fish.jpg';
-
-                        hex_tile.appendChild(hex_img);
-                        cell.appendChild(hex_tile);
-                        row.appendChild(cell);
+                        let column_header = document.createElement('div');
+                        column_header.className = 'column_header';
+                        column_header.innerText = String.fromCharCode('A'.charCodeAt(0) + i);
+                        column_headers.appendChild(column_header);
                     }
 
-                    board.appendChild(row_header_and_row);
-                }
+                    board.appendChild(column_headers);
 
-                let scoreboard = document.querySelector('.scoreboard');
+                    for (let j = 0; j < height; ++j) {
+                        let row_header_and_row = document.createElement('div');
+                        row_header_and_row.className = 'row_header_and_row';
 
-                for (let k = 0; k < nplayers; ++k) {
-                    let score = document.createElement('div');
-                    score.id = 'score_player' + k;
-                    score.className = 'score';
-                    if (k == 0) {
-                        score.classList.add('active_player');
+                        let row_header = document.createElement('div');
+                        row_header.className = 'row_header';
+                        row_header.innerText = j;
+
+                        let row = document.createElement('div');
+                        row.className = 'row';
+
+                        row_header_and_row.appendChild(row_header);
+                        row_header_and_row.appendChild(row);
+
+                        for (let i = 0; i < width; ++i) {
+                            let cell = document.createElement('div');
+                            cell.className = 'cell';
+
+                            let hex_tile = document.createElement('div');
+                            hex_tile.className = 'hex_tile';
+                            hex_tile.id = '_' + j + '_' + i;
+                            hex_tile.addEventListener('click', tileOnClick, false);
+                            hex_tile.addEventListener('dblclick', tileOnDoubleClick, false);
+                            hex_tile.addEventListener('mouseover', tileOnMouseover, false);
+                        
+                            let hex_img = document.createElement('img');
+                            hex_img.className = 'hex_img';
+                            let n = Math.floor(Math.random() * 3) + 1;   
+                            hex_img.src = n + 'fish.jpg';
+
+                            hex_tile.appendChild(hex_img);
+                            cell.appendChild(hex_tile);
+                            row.appendChild(cell);
+                        }
+
+                        board.appendChild(row_header_and_row);
                     }
-                    score.classList.add('color_player' + k);
-                    score.innerText = '0';
-                    score.addEventListener('click', scoreOnClick, false);
-                    scoreboard.appendChild(score);
+
+                    let scoreboard = document.querySelector('.scoreboard');
+
+                    for (let k = 0; k < nplayers; ++k) {
+                        let score = document.createElement('div');
+                        score.id = 'score_player' + k;
+                        score.className = 'score';
+                        if (k == 0) {
+                            score.classList.add('active_player');
+                        }
+                        score.classList.add('color_player' + k);
+                        score.innerText = '0';
+                        score.addEventListener('click', scoreOnClick, false);
+                        scoreboard.appendChild(score);
+                    }
                 }
             }
-        }
 
-        function tileOnMouseover(e) {
-            game.tileOnMouseover(e);
-        }
+            function tileOnMouseover(e) {
+                game.tileOnMouseover(e);
+            }
 
-        function tileOnClick(e) {
-            game.tileOnClick(e);
-        }
+            function tileOnClick(e) {
+                game.tileOnClick(e);
+            }
 
-        function tileOnDoubleClick(e) {
-            game.tileOnDoubleClick(e);
-        }
+            function tileOnDoubleClick(e) {
+                game.tileOnDoubleClick(e);
+            }
 
-        function scoreOnClick(e) {
-            game.scoreOnClick(e);
-        }
+            function scoreOnClick(e) {
+                game.scoreOnClick(e);
+            }
 
-        let game = new Game();
-    </script>
+            let game = new Game();
+        </script>
+    </body>
 </html>
