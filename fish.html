@@ -212,7 +212,7 @@
             const params = new URLSearchParams(window.location.search);
             const width = params.get('width');
             const height = params.get('height');
-            const nplayers = params.get('players');
+            const nplayers = Math.min(params.get('players'), 4);
             const npawns = params.get('pawns');
 
             // hex_tile.id stores row/colum coordinates, it has form of '_y_x'.
@@ -426,7 +426,7 @@
                     }
 
                     this.players = [];
-                    for (let i = 0; i < Math.min(nplayers, 4); ++i) {
+                    for (let i = 0; i < nplayers; ++i) {
                         this.players[i] = new Player(this, i);                    
                     }
                     
